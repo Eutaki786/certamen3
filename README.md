@@ -40,3 +40,6 @@
 | Req. 3 - validar acceso con `$lookup` | `consultas.validar_acceso_invitado` |
 | App estructurada con menú | `main.py` |
 | Validación de entrada / manejo de errores | funciones `validar_*` en `consultas.py`, try/except en `main.py` |
+
+## Tomas Cardenas
+## ingenieria en ciberseguridad inacap concepcion talcahuano
