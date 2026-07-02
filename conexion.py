@@ -3,7 +3,7 @@ Módulo de conexión a MongoDB.
 
 Centraliza la creación del cliente y el acceso a las colecciones,
 y maneja los errores de conexión de forma explícita en vez de dejar
-que el programa se caiga con un traceback feo.
+que el programa se caiga con un traceback feo. 
 """
 
 from pymongo import MongoClient

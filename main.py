@@ -111,6 +111,38 @@ def opcion_validar_acceso():
     print()
 
 
+def opcion_correos_confirmados_por_evento():
+    nombre_evento = _pedir_texto("Nombre del evento (o parte de él): ")
+    resultados = consultas.correos_confirmados_por_nombre_evento(nombre_evento)
+
+    if not resultados:
+        print("No se encontraron confirmados para ese evento (o el evento no existe).\n")
+        return
+
+    eventos_vistos = set()
+    for r in resultados:
+        if r["evento"] not in eventos_vistos:
+            print(f"\nEvento: {r['evento']} ({r['codigo_evento']})")
+            eventos_vistos.add(r["evento"])
+        correo = r["correo"] or "(sin perfil en invitados.json)"
+        print(f"  - {r['nombre_invitado'] or r['rut']}: {correo}")
+    print()
+
+
+def opcion_categoria_por_evento():
+    nombre_evento = _pedir_texto("Nombre del evento (o parte de él): ")
+    resultados = consultas.categoria_por_nombre_evento(nombre_evento)
+
+    if not resultados:
+        print("No se encontró ningún evento con ese nombre.\n")
+        return
+
+    print()
+    for r in resultados:
+        print(f"  {r['nombre']} ({r['codigo']}) -> categoría: {r['categoria']}")
+    print()
+
+
 OPCIONES = {
     "1": ("Listar todos los eventos", opcion_listar_eventos),
     "2": ("Filtrar eventos por categoría / lugar / fecha", opcion_filtrar_eventos),
@@ -119,6 +151,8 @@ OPCIONES = {
     "5": ("Verificar invitado dentro de un evento (subdocumento)", opcion_verificar_subdocumento),
     "6": ("Top 3 eventos con más confirmados", opcion_top_confirmados),
     "7": ("Validar acceso de invitado a evento ($lookup)", opcion_validar_acceso),
+    "8": ("Correos de confirmados de un evento (buscar por nombre)", opcion_correos_confirmados_por_evento),
+    "9": ("Categoría de un evento (buscar por nombre)", opcion_categoria_por_evento),
 }
 
 

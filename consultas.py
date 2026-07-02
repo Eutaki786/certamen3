@@ -246,3 +246,64 @@ def validar_acceso_invitado(codigo_evento: str, rut: str):
         }
 
     return {"acceso": True, "motivo": "Acceso autorizado.", "detalle": datos}
+
+
+# ---------- Consulta adicional 1: correos de confirmados, buscando evento por nombre ----------
+
+def correos_confirmados_por_nombre_evento(nombre_evento: str):
+    """
+    Busca evento(s) por nombre (parcial, case-insensitive) y devuelve el correo
+    electrónico de cada invitado con estado 'confirmado' en ese evento.
+    Usa $lookup porque el correo vive en la colección 'invitados', no en el
+    subdocumento embebido dentro de 'eventos'.
+    """
+    nombre_evento = validar_texto_busqueda(nombre_evento, "nombre de evento")
+
+    pipeline = [
+        {"$match": {"nombre": {"$regex": _regex_seguro(nombre_evento), "$options": "i"}}},
+        {"$unwind": "$invitados"},
+        {"$match": {"invitados.estado": "confirmado"}},
+        {
+            "$lookup": {
+                "from": "invitados",
+                "localField": "invitados.rut",
+                "foreignField": "rut",
+                "as": "perfil",
+            }
+        },
+        {"$unwind": {"path": "$perfil", "preserveNullAndEmptyArrays": True}},
+        {
+            "$project": {
+                "_id": 0,
+                "evento": "$nombre",
+                "codigo_evento": "$codigo",
+                "rut": "$invitados.rut",
+                "nombre_invitado": "$perfil.nombre",
+                "correo": "$perfil.correo",
+            }
+        },
+        {"$sort": {"evento": 1, "correo": 1}},
+    ]
+
+    try:
+        return list(coleccion_eventos().aggregate(pipeline))
+    except PyMongoError as error:
+        raise RuntimeError(f"Error al buscar correos de confirmados: {error}")
+
+
+# ---------- Consulta adicional 2: categoría de un evento, buscando por nombre ----------
+
+def categoria_por_nombre_evento(nombre_evento: str):
+    """
+    Busca evento(s) por nombre (parcial, case-insensitive) y devuelve su categoría.
+    Consulta simple con find(), sin agregación, porque toda la info vive en
+    el mismo documento de 'eventos'.
+    """
+    nombre_evento = validar_texto_busqueda(nombre_evento, "nombre de evento")
+
+    try:
+        filtro = {"nombre": {"$regex": _regex_seguro(nombre_evento), "$options": "i"}}
+        proyeccion = {"_id": 0, "codigo": 1, "nombre": 1, "categoria": 1}
+        return list(coleccion_eventos().find(filtro, proyeccion))
+    except PyMongoError as error:
+        raise RuntimeError(f"Error al obtener categoría: {error}")
